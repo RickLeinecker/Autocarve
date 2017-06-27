@@ -27,7 +27,7 @@ typedef struct tagFORMATSPECS
 #define PDFTYPE 6
 #define EXETYPE 7
 
-#define CONSECUTIVE_TEXT 100
+#define CONSECUTIVE_TEXT 700
 
 char *getNextHeader(int index, int *type, int *start, int *add, unsigned char *dataBuffer, int fileLength, PFORMATSPECS formatSpecs, int numSpecs);
 unsigned char* loadFileData(char *filePath, int *fileLength);
