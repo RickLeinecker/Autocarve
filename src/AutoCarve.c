@@ -5,18 +5,25 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
+#include <time.h>
 #include "AutoCarve.h"
+
+extern char *exts[];
 
 /* We use these two variables for the read-in data. */
 int fileLength;
 unsigned char *dataBuffer;
+
+int writeToLogFile = 0, findOnly = 0;
+
+FILE *logFile = NULL;
 
 /*
 ** Show the program usage.
 */
 void usage(void)
 {
-	printf("Usage: AutoCarve infile\n");
+	printf("Usage: AutoCarve infile [WRITELOG] [FINDONLY]\n");
 	exit(0);
 }
 
@@ -31,8 +38,36 @@ int main(int argc, char *argv[])
 		usage();
 	}
 
+	if (argc >= 3)
+	{
+		for (int i = 1; i < argc; i++)
+		{
+			if (_stricmp(argv[i], "FINDONLY") == 0)
+			{
+				findOnly = 1;
+			}
+
+			if (_stricmp(argv[i], "WRITELOG") == 0)
+			{
+				writeToLogFile = 1;
+
+				time_t curtime = time(NULL);
+				struct tm *loc_time = localtime(&curtime);
+
+				char temp[100];
+				sprintf(temp, "Log-%0d-%0d-2%d.txt", loc_time->tm_mon, loc_time->tm_mday, loc_time->tm_year);
+				logFile = fopen(temp, "wb");
+				if (logFile != NULL)
+				{
+					sprintf(temp, "AutoCarve log %d-%d-2%d\r\nFile:%s\r\n", loc_time->tm_mon, loc_time->tm_mday, loc_time->tm_year, argv[1]);
+					fwrite(temp, strlen(temp), 1, logFile);
+				}
+			}
+		}
+	}
+
 	/* Call the function that loads the data from the given file name. */
-	dataBuffer = loadFileData(argv[1], &fileLength );
+	dataBuffer = loadFileData(argv[1], &fileLength);
 
 	int numSpecs;
 	/* Call the function that loads and parses the format specifications. */
@@ -46,7 +81,7 @@ int main(int argc, char *argv[])
 
 		/* Here we found a header at this byte offset. */
 		if (current != NULL)
- 		{
+		{
 
 			/* Move to the offset past this header (or data for a text file) */
 			if (type == TEXTTYPE)
@@ -64,7 +99,7 @@ int main(int argc, char *argv[])
 				next = getNextHeader(index, &tmpType, &tmpStart, &tmpAdd, dataBuffer, fileLength, formatSpecs, numSpecs);
 				end = index;
 				index++;
-			} 
+			}
 
 			/* Keep going until we either get to the end of the file or find the next header. */
 			while (index < fileLength && next == NULL);
@@ -72,7 +107,8 @@ int main(int argc, char *argv[])
 			index--;
 
 			/* Save this file to disk. */
-			saveFile(number, start, end, type, dataBuffer, fileLength );
+			saveFile(number, start, end, type, dataBuffer, fileLength);
+
 			/* Increment our number counter. */
 			number++;
 
@@ -82,13 +118,19 @@ int main(int argc, char *argv[])
 				index = fileLength;
 			}
 		}
+
 		/* Set to end of file. */
 		else
 		{
-			index = fileLength;
+			index++;
 		}
 	}
+
+	if (logFile != NULL)
+	{
+		fclose(logFile);
+	}
+
 	return 0;
 
 }
-
