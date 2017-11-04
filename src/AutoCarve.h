@@ -33,6 +33,6 @@ char *getNextHeader(int index, int *type, int *start, int *add, unsigned char *d
 unsigned char* loadFileData(char *filePath, int *fileLength);
 void saveFile(int number, int start, int end, int type, unsigned char *dataBuffer, int fileLength);
 FORMATSPECS *readFormatSpecs(int *numFormats );
-int getTypeFromExtension(char *extension);
+int getTypeFromExtension(char *extension); 
 
 #endif
