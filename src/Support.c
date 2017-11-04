@@ -9,6 +9,9 @@
 
 char *exts[] = { "PNG", "GIF", "JPG", "BMP", "TXT", "ZIP", "PDF", "EXE" };
 
+extern FILE *logFile;
+extern int findOnly;
+
 /*
 ** This helper function takes an extension and returns the file type (which is really
 ** just the index into the exts array).
@@ -85,7 +88,7 @@ unsigned char* loadFileData(char *filePath, int *fileLength)
 	}
 
 	/* Read the data into the memory buffer. */
-	fread(dataBuffer, sizeof(unsigned char), *fileLength, fp);
+	int read = fread(dataBuffer, sizeof(unsigned char), *fileLength, fp);
 	/* Close the file handle. */
 	fclose(fp);
 
@@ -99,13 +102,20 @@ unsigned char* loadFileData(char *filePath, int *fileLength)
 ** end=the ending byte offset of the data, type=PNGTYPE or JPGTYPE etc., databuffer=buffer
 ** for the entire loaded-in data, fileLength=the length of the data buffer.
 */
-void saveFile(int number, int start, int end, int type, unsigned char *dataBuffer, int fileLength )
+void saveFile(int number, int start, int end, int type, unsigned char *dataBuffer, int fileLength)
 {
 	char fileName[100];
 	/* Create the temp file name. */
 	sprintf(fileName, "Carved%d.%s", number, exts[type]);
 
+	if (findOnly != 0)
+	{
+		printf("Found Carved%d.%s", number, exts[type]);
+		return;
+	}
+
 	/* Attempt to create the file for saving. */
+
 	FILE *fp = fopen(fileName, "wb");
 	/* Check for failure. */
 	if (fp == NULL)
@@ -126,6 +136,13 @@ void saveFile(int number, int start, int end, int type, unsigned char *dataBuffe
 	/* Close the file handle. */
 	fclose(fp);
 
+	if (logFile != NULL)
+	{
+		char temp[200];
+		sprintf(temp, "%s,%d\r\n", fileName, end - start + 1);
+		fwrite(temp, strlen(temp), 1, logFile);
+	}
+
 	/* Alert user to success. */
 	printf("Saved %s\n", fileName);
 }
@@ -141,24 +158,24 @@ void getNextLine(FILE *fp, char *line, int sizeOfLine)
 	fgets(line, sizeOfLine, fp);
 
 	/* NewLine handling in Linux and Windows are different */
-	#if defined(WIN32) || defined(__WIN32) || defined(__WIN32__)
+#if defined(WIN32) || defined(__WIN32) || defined(__WIN32__)
 	if (strlen(line) > 0 && line[strlen(line) - 1] == '\n')
 	{
 		line[strlen(line) - 1] = 0;
 	}
-	#endif
+#endif
 
-	#if defined(_linux) || defined(_LINUX) || defined(linux)
-	if (strlen(line) > 0 && line[strlen(line) - 2] == '\r' && line[strlen(line) -1] == '\n')
+#if defined(_linux) || defined(_LINUX) || defined(linux)
+	if (strlen(line) > 0 && line[strlen(line) - 2] == '\r' && line[strlen(line) - 1] == '\n')
 	{
 		line[strlen(line) - 1] = 0;
 		line[strlen(line) - 2] = 0;
 	}
-	if(strlen(line) > 0 && line[strlen(line) - 1] == '\n')
+	if (strlen(line) > 0 && line[strlen(line) - 1] == '\n')
 	{
 		line[strlen(line) - 1] = 0;
 	}
-	#endif
+#endif
 }
 
 /* Here we have the line type prefixes. */
@@ -217,7 +234,7 @@ unsigned char *getHeader(char *line, int *headerLength)
 		}
 
 		/* This is a hex value such as 89h */
-		else if (len > 0 && toupper( currentToken[len - 1] ) == 'H')
+		else if (len > 0 && toupper(currentToken[len - 1]) == 'H')
 		{
 			/* Get rid of the trailing 'h' character. */
 			currentToken[len - 1] = 0;
@@ -227,14 +244,14 @@ unsigned char *getHeader(char *line, int *headerLength)
 		}
 
 		/* This is a non-hex value, and we will assume a decimal value. */
-		else if ( len > 0 )
+		else if (len > 0)
 		{
 			/* Evaluate the decimal value and store. */
 			header[*headerLength] = (unsigned char)atoi(currentToken);
 			(*headerLength)++;
 		}
 
-	} 
+	}
 	/* Keep doing this while we haven't gotten to the end of the line. */
 	while (line[i] != 0);
 
@@ -366,7 +383,7 @@ FORMATSPECS *readFormatSpecs(int *numFormats)
 	while (!feof(fp))
 	{
 		/* Get the next line. */
-		getNextLine(fp, line, sizeof(line) );
+		getNextLine(fp, line, sizeof(line));
 
 		/* This lets us know that we have a new header specification. */
 		if (strncmp(line, headerStartText, strlen(headerStartText)) == 0)
@@ -384,7 +401,7 @@ FORMATSPECS *readFormatSpecs(int *numFormats)
 		/* This lets us know that this line is a validation specification. */
 		else if (formatIndex >= 0 && strncmp(line, validationStartText, strlen(validationStartText)) == 0)
 		{
-			getValidation(line, ret[formatIndex].validation, &ret[formatIndex].numValidationSpecs );
+			getValidation(line, ret[formatIndex].validation, &ret[formatIndex].numValidationSpecs);
 		}
 
 	}
