@@ -30,7 +30,7 @@ int getTypeFromExtension(char *extension)
 		}
 	}
 
-	/* Not found, so return -1. */
+	/* Not found, so return -1.  */
 	return(-1);
 }
 
