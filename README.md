@@ -16,4 +16,4 @@ Extension=NAMEOFEXTENSION (e.g.: png)
 (optional):
 Validation=VALIDATION (valid ranges for the header - to prevent false positives)
 
-Usage: AutoCarve followed by filename to carve. 
+Usage: AutoCarve followed by filename to carve. Optional params WRITELOG and FINDONLY
