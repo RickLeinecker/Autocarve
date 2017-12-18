@@ -12,6 +12,7 @@ typedef struct tagFORMATSPECS
 {
 	unsigned char *header;
 	int headerLength;
+	int lengthSpecOffset, lengthSpecSize;
 	VALUEVALIDATION validation[10];
 	int numValidationSpecs;
 	char extension[10];
@@ -27,12 +28,12 @@ typedef struct tagFORMATSPECS
 #define PDFTYPE 6
 #define EXETYPE 7
 
-#define CONSECUTIVE_TEXT 700
+#define CONSECUTIVE_TEXT 1100
 
 char *getNextHeader(int index, int *type, int *start, int *add, unsigned char *dataBuffer, int fileLength, PFORMATSPECS formatSpecs, int numSpecs);
 unsigned char* loadFileData(char *filePath, int *fileLength);
 void saveFile(int number, int start, int end, int type, unsigned char *dataBuffer, int fileLength);
-FORMATSPECS *readFormatSpecs(int *numFormats );
-int getTypeFromExtension(char *extension); 
+FORMATSPECS *readFormatSpecs(int *numFormats);
+int getTypeFromExtension(char *extension);
 
 #endif
