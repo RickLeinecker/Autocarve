@@ -88,7 +88,7 @@ unsigned char* loadFileData(char *filePath, int *fileLength)
 	}
 
 	/* Read the data into the memory buffer. */
-	int read = fread(dataBuffer, sizeof(unsigned char), *fileLength, fp);
+	fread(dataBuffer, sizeof(unsigned char), *fileLength, fp);
 	/* Close the file handle. */
 	fclose(fp);
 
@@ -105,6 +105,8 @@ unsigned char* loadFileData(char *filePath, int *fileLength)
 void saveFile(int number, int start, int end, int type, unsigned char *dataBuffer, int fileLength)
 {
 	char fileName[100];
+	FILE *fp;
+	
 	/* Create the temp file name. */
 	sprintf(fileName, "Carved%d.%s", number, exts[type]);
 
@@ -116,7 +118,7 @@ void saveFile(int number, int start, int end, int type, unsigned char *dataBuffe
 
 	/* Attempt to create the file for saving. */
 
-	FILE *fp = fopen(fileName, "wb");
+	fp = fopen(fileName, "wb");
 	/* Check for failure. */
 	if (fp == NULL)
 	{
@@ -189,6 +191,9 @@ static char validationStartText[] = "VALIDATION=";
 */
 unsigned char *getHeader(char *line, int *headerLength)
 {
+	int i, j, len;
+	char currentToken[100];
+	
 	/* Allocate the header (return) buffer. */
 	unsigned char *header = (unsigned char *)calloc(100, sizeof(unsigned char));
 	if (header == NULL)
@@ -198,8 +203,7 @@ unsigned char *getHeader(char *line, int *headerLength)
 	}
 
 	/* Here we have some local variables for parsing through the header data. */
-	int i = strlen(headerStartText), j, len;
-	char currentToken[100];
+	i = strlen(headerStartText);
 
 	/* Start by setting the header length to zero. */
 	*headerLength = 0;
