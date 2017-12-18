@@ -29,6 +29,8 @@ char *getNextHeader(int index, int *type, int *start, int *add, unsigned char *d
 {
 	int i, j;
 
+	*add = 0;
+
 	/* Set start to the current index. If we find a header here, this will be the start of
 	** the save.
 	*/
@@ -44,6 +46,17 @@ char *getNextHeader(int index, int *type, int *start, int *add, unsigned char *d
 			*/
 			if (formatSpecs[i].numValidationSpecs == 0)
 			{
+				if (formatSpecs[i].lengthSpecSize == 2 )
+				{
+					short tmp = 0;
+					memcpy(&tmp, &dataBuffer[index + formatSpecs[i].lengthSpecOffset], 2);
+					*add = (int)tmp;
+				}
+				else if (formatSpecs[i].lengthSpecSize == 4)
+				{
+					memcpy(add, &dataBuffer[index + formatSpecs[i].lengthSpecOffset], 4);
+				}
+
 				/* Get the type and return the start of the header. */
 				*type = getTypeFromExtension(formatSpecs[i].extension);
 				return((char *)&dataBuffer[index]);
