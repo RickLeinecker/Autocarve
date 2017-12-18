@@ -42,12 +42,20 @@ int main(int argc, char *argv[])
 	{
 		for (int i = 1; i < argc; i++)
 		{
+#if defined(_linux) || defined(_LINUX) || defined(linux)
+			if (strcasecmp(argv[i], "FINDONLY") == 0)
+#else
 			if (_stricmp(argv[i], "FINDONLY") == 0)
+#endif
 			{
 				findOnly = 1;
 			}
 
+#if defined(_linux) || defined(_LINUX) || defined(linux)
+			if (strcasecmp(argv[i], "WRITELOG") == 0)
+#else
 			if (_stricmp(argv[i], "WRITELOG") == 0)
+#endif
 			{
 				writeToLogFile = 1;
 
@@ -132,4 +140,6 @@ int main(int argc, char *argv[])
 	}
 
 	return 0;
+
 }
+
