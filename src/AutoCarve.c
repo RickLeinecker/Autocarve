@@ -99,6 +99,10 @@ int main(int argc, char *argv[])
 			else
 			{
 				index++;
+				if (add > 0)
+				{
+					index += (add - 1);
+				}
 			}
 
 			do
