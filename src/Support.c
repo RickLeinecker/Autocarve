@@ -30,7 +30,7 @@ int getTypeFromExtension(char *extension)
 		}
 	}
 
-	/* Not found, so return -1.  */
+	/* Not found, so return -1. */
 	return(-1);
 }
 
@@ -134,7 +134,7 @@ void saveFile(int number, int start, int end, int type, unsigned char *dataBuffe
 	}
 
 	/* Write the data. */
-	fwrite(&dataBuffer[start], sizeof(unsigned char), end - start + 1, fp);
+	fwrite(&dataBuffer[start], sizeof(unsigned char), end - start, fp);
 	/* Close the file handle. */
 	fclose(fp);
 
@@ -184,6 +184,7 @@ void getNextLine(FILE *fp, char *line, int sizeOfLine)
 static char headerStartText[] = "HEADER=";
 static char extensionStartText[] = "EXTENSION=";
 static char validationStartText[] = "VALIDATION=";
+static char lengthSpecText[] = "LENGTHSPEC=";
 
 /*
 ** Process the header line. Allocate a 100-byte buffer for the header, then parse
@@ -242,6 +243,7 @@ unsigned char *getHeader(char *line, int *headerLength)
 		{
 			/* Get rid of the trailing 'h' character. */
 			currentToken[len - 1] = 0;
+
 			/* Evaluate the hex value and store. */
 			header[*headerLength] = (unsigned char)strtol(currentToken, NULL, 16);
 			(*headerLength)++;
@@ -329,6 +331,27 @@ void getValidation(char *line, PVALUEVALIDATION validation, int *numValidationSp
 	(*numValidationSpecs)++;
 }
 
+void getLengthSpec(char *line, int *lengthSpecOffset, int *lengthSpecSize)
+{
+	char *pt;
+
+	/* Skip past the the LENGTHSPEC= string.  */
+	pt = &line[strlen(lengthSpecText)];
+
+	*lengthSpecSize = atoi(pt);
+
+	/* Look for the next comma. */
+	pt = strstr(pt, ",") + 1;
+	/* If pt is NULL then we did not find another comma. */
+	if (pt == NULL)
+	{
+		/* Call the error reporting function. */
+		reportValidationError(line);
+	}
+
+	*lengthSpecOffset = atoi(pt);
+}
+
 /*
 ** This function opens the format specification file, allocates an array of structs,
 ** reads in the lines, and calls the functions to parse the lines.
@@ -338,11 +361,12 @@ FORMATSPECS *readFormatSpecs(int *numFormats)
 	FORMATSPECS *ret;
 	int formatIndex = -1;
 	char line[500];
+	FILE *fp;
 
 	*numFormats = 0;
 
 	/* Attempt to open the file. */
-	FILE *fp = fopen("FormatSpecs.txt", "r");
+	fp = fopen("FormatSpecs.txt", "r");
 
 	/* Check for file open error. */
 	if (fp == NULL)
@@ -394,6 +418,11 @@ FORMATSPECS *readFormatSpecs(int *numFormats)
 		{
 			formatIndex++;
 			ret[formatIndex].header = getHeader(line, &ret[formatIndex].headerLength);
+		}
+
+		else if (formatIndex >= 0 && strncmp(line, lengthSpecText, strlen(lengthSpecText)) == 0)
+		{
+			getLengthSpec(line, &ret[formatIndex].lengthSpecOffset, &ret[formatIndex].lengthSpecSize);
 		}
 
 		/* This lets us know that we have a new extension specification. */
